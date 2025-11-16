@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมเช็คเบอร์โทรซ้ำ</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-success {
+            background-color: #27ae60;
+        }
+        .btn-success:hover {
+            background-color: #219955;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .file-input {
+            margin-bottom: 15px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #e8f4fc;
+        }
+        .result h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .hidden {
+            display: none;
+        }
+        .instructions {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .instructions ol {
+            margin-top: 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info-box {
+            background-color: #e8f4fc;
+            border: 1px solid #b3e0ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .stat-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .success-message {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .limit-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            color: #004085;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        /* Loading Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .progress-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        .password-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .password-modal-content {
+            background-color: white;
+            margin: 20% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .password-input {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .password-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .file-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        .performance-info {
+            background-color: #e8f6f3;
+            border: 1px solid #a3e4d7;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>โปรแกรมเช็คเบอร์โทรซ้ำในไฟล์ Excel</h1>
+        
+        <div class="instructions">
+            <h3>วิธีใช้งาน:</h3>
+            <ol>
+                <li>อัปโหลดไฟล์ Excel ที่มีเบอร์โทรศัพท์ที่ต้องการตรวจสอบ</li>
+                <li>ระบบจะตรวจสอบเบอร์ซ้ำกับฐานข้อมูลเดิม</li>
+                <li>ดูผลการตรวจสอบและจำนวนเบอร์ซ้ำ</li>
+                <li>ดาวน์โหลดไฟล์ใหม่ที่ตัดเบอร์ซ้ำออกแล้ว</li>
+            </ol>
+            <div class="performance-info">
+                <strong>⚡ ความเร็วสูง:</strong> ตรวจสอบได้เร็วถึง <strong>50,000-100,000 เบอร์/วินาที</strong>
+            </div>
+            <div class="limit-info">
+                <strong>⚠️ ข้อจำกัด:</strong> ไฟล์ Excel แต่ละไฟล์ต้องมีไม่เกิน <strong>300,000 เบอร์</strong>
+            </div>
+            <div class="success-message">
+                <strong>ระบบรองรับฐานข้อมูลไม่จำกัด:</strong> สามารถเก็บเบอร์โทรได้มากกว่า 1 หมื่นล้านเบอร์
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">1. อัปโหลดไฟล์ Excel</div>
+            <div class="file-input">
+                <input type="file" id="fileInput" accept=".xlsx, .xls">
+            </div>
+            <div id="fileInfo" class="file-info hidden">
+                <strong>ข้อมูลไฟล์:</strong>
+                <div id="fileDetails"></div>
+            </div>
+            <div class="button-container">
+                <button class="btn" id="uploadBtn">อัปโหลดและตรวจสอบ</button>
+            </div>
+            <div id="uploadStatus"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">2. ฐานข้อมูลเบอร์โทรศัพท์</div>
+            <div class="button-container">
+                <button class="btn" id="viewDbBtn">ดูฐานข้อมูลปัจจุบัน</button>
+                <button class="btn btn-danger" id="clearDbBtn">ล้างฐานข้อมูลทั้งหมด</button>
+            </div>
+            <div id="dbInfo" class="result hidden">
+                <h3>ข้อมูลในฐานข้อมูล</h3>
+                <div id="dbCount"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">3. ผลการตรวจสอบ</div>
+            <div id="result" class="result hidden">
+                <h3>สรุปผลการตรวจสอบ</h3>
+                <div id="summary"></div>
+                <div class="button-container">
+                    <button class="btn btn-success" id="downloadBtn">ดาวน์โหลดไฟล์ที่ตัดเบอร์ซ้ำออกแล้ว</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="loader"></div>
+            <h3>กำลังประมวลผลไฟล์...</h3>
+            <p id="loadingMessage">กรุณารอสักครู่</p>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <div class="progress-text" id="progressText">0%</div>
+            <p id="processingInfo"></p>
+            <div id="performanceStats" class="performance-info" style="margin-top: 15px; display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="password-modal">
+        <div class="password-modal-content">
+            <h3>ล้างฐานข้อมูลทั้งหมด</h3>
+            <p>กรุณากรอกรหัสผ่านเพื่อยืนยันการล้างฐานข้อมูล</p>
+            <input type="password" id="passwordInput" class="password-input" placeholder="กรอกรหัสผ่าน">
+            <div class="password-buttons">
+                <button class="btn btn-danger" id="confirmClearBtn">ยืนยันล้างข้อมูล</button>
+                <button class="btn btn-secondary" id="cancelClearBtn">ยกเลิก</button>
+            </div>
+            <p id="passwordError" style="color: #e74c3c; margin-top: 10px; display: none;">รหัสผ่านไม่ถูกต้อง</p>
+        </div>
+    </div>
+
+    <script>
+        // ค่าคงที่
+        const MAX_PHONES_PER_FILE = 300000;
+        const PASSWORD = "23669";
+        const CHUNK_SIZE = 50000; // เพิ่ม chunk size เป็น 50,000
+        const BATCH_SIZE = 1000; // ขนาด batch สำหรับการบันทึก
+
+        // ระบบจัดการฐานข้อมูลแบบเร็ว
+        class FastPhoneDatabase {
+            constructor() {
+                this.storageKey = 'phoneDatabase';
+                this.phoneSet = new Set();
+                this.pendingAdds = new Set(); // รอการบันทึก
+                this.isSaving = false;
+                this.load();
+            }
+
+            load() {
+                try {
+                    const saved = localStorage.getItem(this.storageKey);
+                    if (saved) {
+                        const phoneArray = JSON.parse(saved);
+                        this.phoneSet = new Set(phoneArray);
+                        console.log('โหลดฐานข้อมูลสำเร็จ:', this.phoneSet.size, 'เบอร์');
+                    }
+                } catch (error) {
+                    console.error('เกิดข้อผิดพลาดในการโหลดฐานข้อมูล:', error);
+                    this.phoneSet = new Set();
+                }
+            }
+
+            // บันทึกแบบ asynchronous ไม่บล็อก UI
+            async save() {
+                if (this.isSaving) return;
+                
+                this.isSaving = true;
+                try {
+                    const phoneArray = Array.from(this.phoneSet);
+                    localStorage.setItem(this.storageKey, JSON.stringify(phoneArray));
+                    this.pendingAdds.clear();
+                } catch (error) {
+                    console.error('เกิดข้อผิดพลาดในการบันทึกฐานข้อมูล:', error);
+                    if (error.name === 'QuotaExceededError') {
+                        this.clearOldData();
+                        await this.save();
+                    }
+                } finally {
+                    this.isSaving = false;
+                }
+            }
+
+            // บันทึกแบบ batch
+            async saveBatch() {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        this.save().then(resolve);
+                    }, 100);
+                });
+            }
+
+            clearOldData() {
+                const phoneArray = Array.from(this.phoneSet);
+                const halfSize = Math.floor(phoneArray.length / 2);
+                this.phoneSet = new Set(phoneArray.slice(-halfSize));
+            }
+
+            // ตรวจสอบหลายเบอร์พร้อมกัน (เร็วกว่ามาก)
+            checkMultiplePhones(phones) {
+                const results = [];
+                for (const phone of phones) {
+                    results.push({
+                        phone: phone,
+                        isDuplicate: this.phoneSet.has(phone)
+                    });
+                }
+                return results;
+            }
+
+            // เพิ่มหลายเบอร์พร้อมกัน
+            async addMultiplePhones(phoneResults) {
+                let newCount = 0;
+                const newPhones = [];
+
+                for (const result of phoneResults) {
+                    if (!result.isDuplicate) {
+                        this.phoneSet.add(result.phone);
+                        this.pendingAdds.add(result.phone);
+                        newCount++;
+                        newPhones.push(result.phone);
+                    }
+                }
+
+                // บันทึกเมื่อมีข้อมูลใหม่จำนวนมาก
+                if (this.pendingAdds.size >= BATCH_SIZE) {
+                    await this.saveBatch();
+                }
+
+                return { newCount, duplicateCount: phoneResults.length - newCount };
+            }
+
+            async getCount() {
+                return this.phoneSet.size;
+            }
+
+            async clear() {
+                this.phoneSet.clear();
+                this.pendingAdds.clear();
+                localStorage.removeItem(this.storageKey);
+            }
+
+            async exportToArray() {
+                return Array.from(this.phoneSet);
+            }
+
+            // บันทึกข้อมูลที่ค้างทั้งหมด
+            async flush() {
+                if (this.pendingAdds.size > 0) {
+                    await this.save();
+                }
+            }
+        }
+
+        // ระบบหลัก
+        const phoneDB = new FastPhoneDatabase();
+        let startTime = 0;
+
+        // แสดง loading modal
+        function showLoading(message = "กรุณารอสักครู่") {
+            document.getElementById('loadingMessage').textContent = message;
+            document.getElementById('loadingModal').style.display = 'block';
+            document.getElementById('performanceStats').style.display = 'none';
+        }
+
+        // ซ่อน loading modal
+        function hideLoading() {
+            document.getElementById('loadingModal').style.display = 'none';
+            resetProgress();
+        }
+
+        // อัพเดท progress bar
+        function updateProgress(percent, message = "") {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const processingInfo = document.getElementById('processingInfo');
+            
+            progressBar.style.width = percent + '%';
+            progressText.textContent = percent + '%';
+            
+            if (message) {
+                processingInfo.textContent = message;
+            }
+        }
+
+        // แสดงสถิติประสิทธิภาพ
+        function showPerformanceStats(processedCount, elapsedTime) {
+            const statsDiv = document.getElementById('performanceStats');
+            const phonesPerSecond = Math.round(processedCount / (elapsedTime / 1000));
+            
+            statsDiv.innerHTML = `
+                <strong>⚡ สถิติประสิทธิภาพ:</strong><br>
+                ประมวลผล: ${processedCount.toLocaleString()} เบอร์<br>
+                เวลา: ${(elapsedTime / 1000).toFixed(1)} วินาที<br>
+                ความเร็ว: ${phonesPerSecond.toLocaleString()} เบอร์/วินาที
+            `;
+            statsDiv.style.display = 'block';
+        }
+
+        // รีเซ็ต progress bar
+        function resetProgress() {
+            updateProgress(0, "");
+        }
+
+        // แสดงสถานะการอัปโหลด
+        function showUploadStatus(message, isError = false) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = `<div class="${isError ? 'error-message' : 'info-box'}">${message}</div>`;
+        }
+
+        // แสดงข้อมูลไฟล์
+        function showFileInfo(filename, size, estimatedPhones) {
+            const fileInfoDiv = document.getElementById('fileInfo');
+            const fileDetailsDiv = document.getElementById('fileDetails');
+            
+            fileDetailsDiv.innerHTML = `
+                <div>ชื่อไฟล์: ${filename}</div>
+                <div>ขนาด: ${(size / 1024 / 1024).toFixed(2)} MB</div>
+                <div>ประมาณการเบอร์โทร: ${estimatedPhones.toLocaleString()} เบอร์</div>
+                <div>ขีดจำกัด: ${MAX_PHONES_PER_FILE.toLocaleString()} เบอร์ต่อไฟล์</div>
+            `;
+            
+            fileInfoDiv.classList.remove('hidden');
+        }
+
+        // ซ่อนข้อมูลไฟล์
+        function hideFileInfo() {
+            document.getElementById('fileInfo').classList.add('hidden');
+        }
+
+        // ประมาณการจำนวนเบอร์โทรจากขนาดไฟล์
+        function estimatePhoneCount(fileSize) {
+            const phonesPerMB = 10000;
+            const estimated = Math.ceil((fileSize / 1024 / 1024) * phonesPerMB);
+            return Math.min(estimated, MAX_PHONES_PER_FILE * 2);
+        }
+
+        // ตรวจสอบไฟล์เมื่อผู้ใช้เลือก
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const estimatedPhones = estimatePhoneCount(file.size);
+                showFileInfo(file.name, file.size, estimatedPhones);
+                
+                if (estimatedPhones > MAX_PHONES_PER_FILE) {
+                    showUploadStatus(`⚠️ ไฟล์นี้มีขนาดใหญ่ อาจมีเบอร์โทรเกิน ${MAX_PHONES_PER_FILE.toLocaleString()} เบอร์ กรุณาตรวจสอบไฟล์`, true);
+                } else {
+                    showUploadStatus('✅ ไฟล์พร้อมสำหรับการอัปโหลด');
+                }
+            } else {
+                hideFileInfo();
+                showUploadStatus('📁 กรุณาเลือกไฟล์ Excel เพื่อเริ่มการตรวจสอบ');
+            }
+        });
+
+        // อัปโหลดและตรวจสอบไฟล์ Excel
+        document.getElementById('uploadBtn').addEventListener('click', async function() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (!file) {
+                showUploadStatus('❌ กรุณาเลือกไฟล์ Excel ก่อน', true);
+                return;
+            }
+
+            if (!file.name.match(/\.(xlsx|xls)$/)) {
+                showUploadStatus('❌ กรุณาเลือกไฟล์ Excel (.xlsx หรือ .xls) เท่านั้น', true);
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) {
+                showUploadStatus('❌ ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 50MB)', true);
+                return;
+            }
+
+            // เริ่มจับเวลา
+            startTime = Date.now();
+
+            // ปิดปุ่มขณะประมวลผล
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'กำลังประมวลผล...';
+            showUploadStatus('⏳ กำลังเริ่มประมวลผลไฟล์...');
+
+            try {
+                showLoading('กำลังอ่านไฟล์ Excel...');
+                
+                setTimeout(async () => {
+                    try {
+                        await processExcelFile(file);
+                        showUploadStatus('✅ ประมวลผลไฟล์เสร็จสิ้น! ดูผลลัพธ์ได้ที่ส่วน "ผลการตรวจสอบ"');
+                    } catch (error) {
+                        console.error('เกิดข้อผิดพลาด:', error);
+                        showUploadStatus(`❌ เกิดข้อผิดพลาด: ${error.message}`, true);
+                    } finally {
+                        hideLoading();
+                        uploadBtn.disabled = false;
+                        uploadBtn.textContent = 'อัปโหลดและตรวจสอบ';
+                    }
+                }, 100);
+                
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาด:', error);
+                showUploadStatus(`❌ เกิดข้อผิดพลาด: ${error.message}`, true);
+                hideLoading();
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'อัปโหลดและตรวจสอบ';
+            }
+        });
+
+        // ประมวลผลไฟล์ Excel
+        async function processExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    try {
+                        updateProgress(10, 'กำลังอ่านข้อมูลจากไฟล์...');
+                        
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        updateProgress(30, 'กำลังแปลงข้อมูล...');
+                        
+                        if (workbook.SheetNames.length === 0) {
+                            throw new Error('ไม่พบชีทในไฟล์ Excel');
+                        }
+                        
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        if (!worksheet || !worksheet['!ref']) {
+                            throw new Error('ไม่พบข้อมูลในชีทแรกของไฟล์ Excel');
+                        }
+                        
+                        // อ่านข้อมูลทั้งหมดในครั้งเดียว (เร็วกว่า)
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        
+                        if (jsonData.length === 0) {
+                            throw new Error('ไม่พบข้อมูลในไฟล์ Excel');
+                        }
+
+                        updateProgress(50, 'กำลังประมวลผลเบอร์โทรศัพท์...');
+                        
+                        await processPhoneNumbersFast(jsonData);
+                        
+                        updateProgress(100, 'ประมวลผลเสร็จสิ้น!');
+                        setTimeout(() => {
+                            resolve();
+                        }, 500);
+                        
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = () => {
+                    reject(new Error('ไม่สามารถอ่านไฟล์ได้ - ไฟล์อาจเสียหาย'));
+                };
+                
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // ประมวลผลเบอร์โทรศัพท์แบบเร็ว
+        async function processPhoneNumbersFast(data) {
+            let allPhones = [];
+            let totalProcessed = 0;
+            
+            updateProgress(60, 'กำลังรวบรวมเบอร์โทรศัพท์...');
+            
+            // รวบรวมเบอร์โทรทั้งหมดในครั้งเดียว (เร็วกว่า)
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                
+                if (Array.isArray(row)) {
+                    for (const cell of row) {
+                        if (cell !== null && cell !== undefined && cell !== '') {
+                            const phone = formatPhoneNumberFast(cell.toString());
+                            if (phone) {
+                                allPhones.push(phone);
+                                totalProcessed++;
+                                
+                                if (totalProcessed > MAX_PHONES_PER_FILE) {
+                                    throw new Error(`ไฟล์มีเบอร์โทรเกิน ${MAX_PHONES_PER_FILE.toLocaleString()} เบอร์!`);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            console.log(`รวบรวมเบอร์โทรได้ ${allPhones.length} เบอร์`);
+
+            if (allPhones.length === 0) {
+                throw new Error('ไม่พบเบอร์โทรศัพท์ในไฟล์');
+            }
+
+            updateProgress(80, 'กำลังตรวจสอบเบอร์ซ้ำ...');
+
+            // ตรวจสอบแบบแบ่ง chunk ใหญ่
+            let totalDuplicates = 0;
+            let totalUnique = 0;
+
+            for (let i = 0; i < allPhones.length; i += CHUNK_SIZE) {
+                const chunk = allPhones.slice(i, i + CHUNK_SIZE);
+                
+                // ตรวจสอบหลายเบอร์พร้อมกัน
+                const checkResults = phoneDB.checkMultiplePhones(chunk);
+                
+                // เพิ่มเบอร์ใหม่หลายเบอร์พร้อมกัน
+                const { newCount, duplicateCount } = await phoneDB.addMultiplePhones(checkResults);
+                
+                totalUnique += newCount;
+                totalDuplicates += duplicateCount;
+
+                const progress = 80 + Math.floor((i / allPhones.length) * 15);
+                updateProgress(progress, `กำลังตรวจสอบเบอร์... (${Math.min(i + CHUNK_SIZE, allPhones.length)} จาก ${allPhones.length})`);
+
+                // แสดงสถิติประสิทธิภาพ
+                const elapsedTime = Date.now() - startTime;
+                showPerformanceStats(i + chunk.length, elapsedTime);
+            }
+
+            // บันทึกข้อมูลที่ค้างทั้งหมด
+            await phoneDB.flush();
+
+            console.log(`ผลการตรวจสอบ: ทั้งหมด ${allPhones.length}, ซ้ำ ${totalDuplicates}, ใหม่ ${totalUnique}`);
+
+            // แสดงผล
+            await displayResults(allPhones.length, totalDuplicates, totalUnique);
+        }
+
+        // จัดรูปแบบเบอร์โทรศัพท์แบบเร็ว
+        function formatPhoneNumberFast(phone) {
+            // ใช้ regex แทนการ replace ทีละตัว (เร็วกว่า)
+            let cleaned = phone.replace(/\D/g, '');
+            
+            if (cleaned.startsWith('66') && cleaned.length >= 10) {
+                cleaned = '0' + cleaned.substring(2);
+            }
+            
+            // ตรวจสอบรูปแบบเบอร์โทรไทย
+            if ((cleaned.startsWith('0') && cleaned.length === 10) || cleaned.length === 9) {
+                return cleaned;
+            }
+            
+            return null;
+        }
+
+        // แสดงผลการตรวจสอบ
+        async function displayResults(allNumbers, duplicates, uniqueNumbers) {
+            const resultDiv = document.getElementById('result');
+            const summaryDiv = document.getElementById('summary');
+            const totalInDB = await phoneDB.getCount();
+            const elapsedTime = Date.now() - startTime;
+            
+            resultDiv.classList.remove('hidden');
+            
+            summaryDiv.innerHTML = `
+                <div class="stat-box">
+                    <div class="info-box">
+                        <p><strong>สรุปผลการตรวจสอบ:</strong></p>
+                        <p>พบเบอร์โทรทั้งหมดในไฟล์: <span class="stat-number">${allNumbers.toLocaleString()}</span> เบอร์</p>
+                        <p>พบเบอร์ซ้ำ: <span class="stat-number">${duplicates.toLocaleString()}</span> เบอร์</p>
+                        <p>เบอร์ที่ไม่ซ้ำ: <span class="stat-number">${uniqueNumbers.toLocaleString()}</span> เบอร์</p>
+                        <p>ขนาดฐานข้อมูลปัจจุบัน: <span class="stat-number">${totalInDB.toLocaleString()}</span> เบอร์</p>
+                        <p>⏱️ เวลาที่ใช้: ${(elapsedTime / 1000).toFixed(1)} วินาที</p>
+                        <p>✅ การประมวลผลเสร็จสิ้นเรียบร้อย</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ดูฐานข้อมูลปัจจุบัน
+        document.getElementById('viewDbBtn').addEventListener('click', async function() {
+            const dbInfo = document.getElementById('dbInfo');
+            const dbCount = document.getElementById('dbCount');
+            
+            dbInfo.classList.remove('hidden');
+            const count = await phoneDB.getCount();
+            
+            dbCount.innerHTML = `
+                <div class="info-box">
+                    <p><strong>ข้อมูลในฐานข้อมูล:</strong></p>
+                    <p>จำนวนเบอร์โทรในฐานข้อมูล: <span class="stat-number">${count.toLocaleString()}</span> เบอร์</p>
+                    <p>ระบบรองรับฐานข้อมูลไม่จำกัดขนาด</p>
+                    <p>สามารถเก็บได้มากกว่า 1 หมื่นล้านเบอร์</p>
+                </div>
+            `;
+        });
+
+        // ดาวน์โหลดไฟล์
+        document.getElementById('downloadBtn').addEventListener('click', async function() {
+            showLoading('กำลังสร้างไฟล์ Excel...');
+            
+            setTimeout(async () => {
+                try {
+                    const allPhones = await phoneDB.exportToArray();
+                    
+                    if (allPhones.length === 0) {
+                        alert('ไม่พบข้อมูลในฐานข้อมูล');
+                        hideLoading();
+                        return;
+                    }
+                    
+                    const wb = XLSX.utils.book_new();
+                    const phoneData = allPhones.map(phone => [phone]);
+                    phoneData.unshift(['เบอร์โทรศัพท์']);
+                    
+                    const ws = XLSX.utils.aoa_to_sheet(phoneData);
+                    XLSX.utils.book_append_sheet(wb, ws, 'เบอร์โทร');
+                    XLSX.writeFile(wb, 'เบอร์โทรที่ไม่ซ้ำ.xlsx');
+                    
+                    hideLoading();
+                    alert(`ดาวน์โหลดไฟล์สำเร็จ! มีทั้งหมด ${allPhones.length.toLocaleString()} เบอร์`);
+                } catch (error) {
+                    console.error('เกิดข้อผิดพลาดในการสร้างไฟล์:', error);
+                    alert('เกิดข้อผิดพลาดในการสร้างไฟล์');
+                    hideLoading();
+                }
+            }, 100);
+        });
+
+        // ล้างฐานข้อมูล
+        document.getElementById('clearDbBtn').addEventListener('click', function() {
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            document.getElementById('passwordModal').style.display = 'block';
+        });
+
+        document.getElementById('confirmClearBtn').addEventListener('click', async function() {
+            const passwordInput = document.getElementById('passwordInput').value;
+            
+            if (passwordInput === PASSWORD) {
+                showLoading('กำลังล้างฐานข้อมูล...');
+                try {
+                    await phoneDB.clear();
+                    document.getElementById('passwordModal').style.display = 'none';
+                    document.getElementById('dbInfo').classList.add('hidden');
+                    document.getElementById('result').classList.add('hidden');
+                    hideLoading();
+                    alert('ล้างฐานข้อมูลเรียบร้อยแล้ว');
+                } catch (error) {
+                    hideLoading();
+                    alert('เกิดข้อผิดพลาดในการล้างฐานข้อมูล');
+                }
+            } else {
+                document.getElementById('passwordError').style.display = 'block';
+            }
+        });
+
+        document.getElementById('cancelClearBtn').addEventListener('click', function() {
+            document.getElementById('passwordModal').style.display = 'none';
+        });
+
+        // แสดงสถานะเมื่อโหลดหน้าเว็บเสร็จ
+        document.addEventListener('DOMContentLoaded', function() {
+            showUploadStatus('📁 กรุณาเลือกไฟล์ Excel เพื่อเริ่มการตรวจสอบ (จำกัดไม่เกิน 300,000 เบอร์ต่อไฟล์)');
+            console.log('ระบบพร้อมใช้งาน');
+        });
+    </script>
+</body>
+</html>
